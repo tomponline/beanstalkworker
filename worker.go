@@ -4,6 +4,8 @@ import "log"
 import "time"
 import "github.com/kr/beanstalk"
 
+// Worker represents a single process that is connecting to beanstalkd
+// and is consuming jobs from one or more tubes.
 type Worker struct {
 	addr       string
 	watchTubes []string
@@ -60,6 +62,7 @@ func (w *Worker) Run(cb func(job *RawJob)) {
 	}
 }
 
+// getNextJob retrieves the next job from the tubes being watched.
 func (w *Worker) getNextJob(tubes *beanstalk.TubeSet) *RawJob {
 	id, body, err := tubes.Reserve(60 * time.Second)
 	job := &RawJob{

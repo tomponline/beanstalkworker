@@ -6,11 +6,10 @@ import "github.com/kr/beanstalk"
 import "fmt"
 import "log"
 
-const beanstalkdPrioHigh = 1023
-const beanstalkdPrioNorm = 1024
-const beanstalkdPrioLow = 1025
-const beanstalkdDefaultTtr = 60 //Default time to run
+// PrioLow is the priority that jobs are released/buried with.
+const PrioLow = 1025
 
+// RawJob represents the raw job data that is returned by beanstalkd.
 type RawJob struct {
 	id   uint64
 	err  error
@@ -18,28 +17,28 @@ type RawJob struct {
 	conn *beanstalk.Conn
 }
 
-// deleteJob function deletes the job from the queue that is referenced by Job.
+// Delete function deletes the job from the queue.
 func (job *RawJob) Delete() {
 	if err := job.conn.Delete(job.id); err != nil {
 		job.LogError("Could not delete job: " + err.Error())
 	}
 }
 
-// releaseJob function releases the job from the queue that is referenced by Job.
+// Release function releases the job from the queue.
 func (job *RawJob) Release() {
-	if err := job.conn.Release(job.id, beanstalkdPrioLow, 30*time.Second); err != nil {
+	if err := job.conn.Release(job.id, PrioLow, 30*time.Second); err != nil {
 		job.LogError("Could not release job: " + err.Error())
 	}
 }
 
-// buryJob function buries the job from the queue that is referenced by Job.
+// Bury function buries the job from the queue.
 func (job *RawJob) Bury() {
-	if err := job.conn.Bury(job.id, beanstalkdPrioLow); err != nil {
+	if err := job.conn.Bury(job.id, PrioLow); err != nil {
 		job.LogError("Could not bury job: " + err.Error())
 	}
 }
 
-//getAge gets the age of the job (in seconds) from the stats
+// GetAge gets the age of the job (in seconds) from the beanstalkd server.
 func (job *RawJob) GetAge() (int, error) {
 	stats, err := job.conn.StatsJob(job.id)
 	if err != nil {
@@ -54,12 +53,12 @@ func (job *RawJob) GetAge() (int, error) {
 	return age, nil
 }
 
-// logError function logs an error messagge regarding the job referenced by Job.
+// LogError function logs an error messagge regarding the job.
 func (job *RawJob) LogError(a ...interface{}) {
 	log.Print("Job ", job.id, ": Error: ", fmt.Sprint(a...))
 }
 
-// logInfo function logs an info messagge regarding the job referenced by Job.
+// LogInfo function logs an info messagge regarding the job.
 func (job *RawJob) LogInfo(a ...interface{}) {
 	log.Print("Job ", job.id, ": ", fmt.Sprint(a...))
 }
