@@ -3,17 +3,18 @@ package beanstalkworker
 import "log"
 import "time"
 import "github.com/kr/beanstalk"
+import "encoding/json"
 
 // Worker represents a single process that is connecting to beanstalkd
 // and is consuming jobs from one or more tubes.
 type Worker struct {
 	addr     string
-	tubeSubs map[string]func(JobManager)
+	tubeSubs map[string]func(JobManager, map[string]string)
 }
 
 // NewWorker creates a new worker process,
 // but does not actually connect to beanstalkd server yet.
-func NewWorker(addr string, tubeSubs map[string]func(JobManager)) *Worker {
+func NewWorker(addr string, tubeSubs map[string]func(JobManager, map[string]string)) *Worker {
 	return &Worker{
 		addr:     addr,
 		tubeSubs: tubeSubs,
@@ -94,7 +95,15 @@ func (w *Worker) getNextJob(tubes *beanstalk.TubeSet) *RawJob {
 func (w *Worker) subHandler(job *RawJob) {
 	for tube, cb := range w.tubeSubs {
 		if tube == job.GetTube() {
-			cb(job)
+
+			jobData := make(map[string]string)
+			if err := json.Unmarshal(*job.body, &jobData); err != nil {
+				job.LogError("Error decoding JSON for job: ", err, ", releasing...")
+				job.Release()
+				return
+			}
+
+			cb(job, jobData)
 		}
 	}
 }
