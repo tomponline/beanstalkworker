@@ -7,25 +7,24 @@ import "github.com/kr/beanstalk"
 // Worker represents a single process that is connecting to beanstalkd
 // and is consuming jobs from one or more tubes.
 type Worker struct {
-	addr       string
-	watchTubes []string
+	addr     string
+	tubeSubs map[string]func(JobManager)
 }
 
 // NewWorker creates a new worker process,
 // but does not actually connect to beanstalkd server yet.
-func NewWorker(addr string, watchTubes []string) *Worker {
+func NewWorker(addr string, tubeSubs map[string]func(JobManager)) *Worker {
 	return &Worker{
-		addr:       addr,
-		watchTubes: watchTubes,
+		addr:     addr,
+		tubeSubs: tubeSubs,
 	}
 }
 
 // Run activates the worker and attempts to maintain a connection to
 // the beanstalkd server.
-func (w *Worker) Run(cb func(job *RawJob)) {
+func (w *Worker) Run() {
 	for {
 		conn, err := beanstalk.Dial("tcp", w.addr)
-
 		if err != nil {
 			log.Print("Error connecting to beanstalkd: ", err)
 			time.Sleep(5 * time.Second)
@@ -34,8 +33,12 @@ func (w *Worker) Run(cb func(job *RawJob)) {
 
 		defer conn.Close()
 
-		tubes := beanstalk.NewTubeSet(conn, w.watchTubes...)
-		log.Printf("Connected, watching %v for new jobs", w.watchTubes)
+		watchTubes := make([]string, 0, len(w.tubeSubs))
+		for tube := range w.tubeSubs {
+			watchTubes = append(watchTubes, tube)
+		}
+		tubes := beanstalk.NewTubeSet(conn, watchTubes...)
+		log.Printf("Connected, watching %v for new jobs", watchTubes)
 
 	loop:
 		for {
@@ -56,7 +59,7 @@ func (w *Worker) Run(cb func(job *RawJob)) {
 				break loop
 			}
 
-			cb(job) //Pass to callback handler.
+			w.subHandler(job)
 		}
 		conn.Close() //We will reconnect in next loop iteration.
 	}
@@ -72,5 +75,26 @@ func (w *Worker) getNextJob(tubes *beanstalk.TubeSet) *RawJob {
 		conn: tubes.Conn,
 	}
 
+	if err != nil {
+		return job
+	}
+
+	//Look up tube info.
+	stats, err := tubes.Conn.StatsJob(job.id)
+	if err != nil {
+		job.err = err
+		return job
+	}
+
+	job.tube = stats["tube"]
+
 	return job
+}
+
+func (w *Worker) subHandler(job *RawJob) {
+	for tube, cb := range w.tubeSubs {
+		if tube == job.GetTube() {
+			cb(job)
+		}
+	}
 }

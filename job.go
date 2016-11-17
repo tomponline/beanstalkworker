@@ -6,10 +6,6 @@ type JobManager interface {
 	Release()
 	LogError(a ...interface{})
 	LogInfo(a ...interface{})
-}
-
-// JobAccessor interface represents a way to access a job's decoded data fields.
-type JobAccessor interface {
-	JobManager
-	GetField(field string) string
+	GetAge() (int, error)
+	GetTube() string
 }

@@ -15,6 +15,7 @@ type RawJob struct {
 	err  error
 	body *[]byte
 	conn *beanstalk.Conn
+	tube string
 }
 
 // Delete function deletes the job from the queue.
@@ -53,12 +54,17 @@ func (job *RawJob) GetAge() (int, error) {
 	return age, nil
 }
 
+// GetTube returns the tube name we got this job from.
+func (job *RawJob) GetTube() string {
+	return job.tube
+}
+
 // LogError function logs an error messagge regarding the job.
 func (job *RawJob) LogError(a ...interface{}) {
-	log.Print("Job ", job.id, ": Error: ", fmt.Sprint(a...))
+	log.Print("Tube: ", job.tube, ", Job: ", job.id, ": Error: ", fmt.Sprint(a...))
 }
 
 // LogInfo function logs an info messagge regarding the job.
 func (job *RawJob) LogInfo(a ...interface{}) {
-	log.Print("Job ", job.id, ": ", fmt.Sprint(a...))
+	log.Print("Tube: ", job.tube, ", Job: ", job.id, ": ", fmt.Sprint(a...))
 }
