@@ -4,20 +4,45 @@ import "log"
 import "time"
 import "github.com/kr/beanstalk"
 import "encoding/json"
+import "reflect"
+
+type Handler interface{}
 
 // Worker represents a single process that is connecting to beanstalkd
 // and is consuming jobs from one or more tubes.
 type Worker struct {
 	addr     string
-	tubeSubs map[string]func(JobManager, map[string]string)
+	tubeSubs map[string]func(*RawJob)
 }
 
 // NewWorker creates a new worker process,
 // but does not actually connect to beanstalkd server yet.
-func NewWorker(addr string, tubeSubs map[string]func(JobManager, map[string]string)) *Worker {
+func NewWorker(addr string) *Worker {
 	return &Worker{
 		addr:     addr,
-		tubeSubs: tubeSubs,
+		tubeSubs: make(map[string]func(*RawJob)),
+	}
+}
+
+func (w *Worker) Subscribe(tube string, cb Handler) {
+	w.tubeSubs[tube] = func(job *RawJob) {
+		jobVal := reflect.ValueOf(job)
+		cbFunc := reflect.ValueOf(cb)
+		cbType := reflect.TypeOf(cb)
+		if cbType.Kind() != reflect.Func {
+			panic("Handler needs to be a func")
+		}
+
+		dataType := cbType.In(1)
+		dataPtr := reflect.New(dataType)
+
+		if err := json.Unmarshal(*job.body, dataPtr.Interface()); err != nil {
+			job.LogError("Error decoding JSON for job: ", err, ", releasing...")
+			job.Release()
+			return
+		}
+
+		cbFunc.Call([]reflect.Value{jobVal, reflect.Indirect(dataPtr)})
 	}
 }
 
@@ -95,15 +120,7 @@ func (w *Worker) getNextJob(tubes *beanstalk.TubeSet) *RawJob {
 func (w *Worker) subHandler(job *RawJob) {
 	for tube, cb := range w.tubeSubs {
 		if tube == job.GetTube() {
-
-			jobData := make(map[string]string)
-			if err := json.Unmarshal(*job.body, &jobData); err != nil {
-				job.LogError("Error decoding JSON for job: ", err, ", releasing...")
-				job.Release()
-				return
-			}
-
-			cb(job, jobData)
+			cb(job)
 		}
 	}
 }
