@@ -6,6 +6,7 @@ import "github.com/kr/beanstalk"
 import "encoding/json"
 import "reflect"
 
+// Handler provides an interface type for callback functions.
 type Handler interface{}
 
 // Worker represents a single process that is connecting to beanstalkd
@@ -24,7 +25,7 @@ func NewWorker(addr string) *Worker {
 	}
 }
 
-// Subcribe adds a handler function to be run for jobs coming from a particular tube.
+// Subscribe adds a handler function to be run for jobs coming from a particular tube.
 func (w *Worker) Subscribe(tube string, cb Handler) {
 	w.tubeSubs[tube] = func(job *RawJob) {
 		jobVal := reflect.ValueOf(job)
