@@ -124,5 +124,7 @@ func (w *Worker) subHandler(job *RawJob) {
 	tube := job.GetTube()
 	if cb, ok := w.tubeSubs[tube]; ok {
 		cb(job)
+	} else {
+		panic("Should not get a job with no handler function")
 	}
 }
