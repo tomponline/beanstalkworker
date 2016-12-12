@@ -5,6 +5,7 @@ import "time"
 import "github.com/kr/beanstalk"
 import "encoding/json"
 import "reflect"
+import "context"
 
 // Handler provides an interface type for callback functions.
 type Handler interface{}
@@ -50,7 +51,7 @@ func (w *Worker) Subscribe(tube string, cb Handler) {
 
 // Run activates the worker and attempts to maintain a connection to
 // the beanstalkd server.
-func (w *Worker) Run() {
+func (w *Worker) Run(ctx context.Context) {
 	for {
 		conn, err := beanstalk.Dial("tcp", w.addr)
 		if err != nil {
@@ -67,34 +68,42 @@ func (w *Worker) Run() {
 		}
 		tubes := beanstalk.NewTubeSet(conn, watchTubes...)
 		log.Printf("Connected, watching %v for new jobs", watchTubes)
+		jobCh := make(chan *RawJob)
 
 	loop:
 		for {
-			job := w.getNextJob(tubes)
+			go w.getNextJob(jobCh, tubes)
+			select {
+			case <-ctx.Done():
+				//Context has been cancelled, time to finish up.
+				return
+			case job := <-jobCh:
+				//Handle job from the beanstalkd server.
+				if job.err != nil {
+					if job.err.Error() == "reserve-with-timeout: timeout" {
+						continue
+					} else if job.err.Error() == "reserve-with-timeout: deadline soon" {
+						//Dont re-poll too often. This is important because otherwise we
+						//end up in a busy wait loop for 1s spinning up go routines.
+						time.Sleep(2 * time.Second)
+						continue
+					}
 
-			if job.err != nil {
-				if job.err.Error() == "reserve-with-timeout: timeout" {
-					continue
-				} else if job.err.Error() == "reserve-with-timeout: deadline soon" {
-					//Dont re-poll too often. This is important because otherwise we
-					//end up in a busy wait loop for 1s spinning up go routines.
-					time.Sleep(2 * time.Second)
-					continue
+					//Some other problem so restart connection to beanstalkd.
+					log.Print("Error getting job from tube: ", job.err)
+					break loop
 				}
 
-				//Some other problem so restart connection to beanstalkd.
-				log.Print("Error getting job from tube: ", job.err)
-				break loop
+				w.subHandler(job)
 			}
 
-			w.subHandler(job)
 		}
 		conn.Close() //We will reconnect in next loop iteration.
 	}
 }
 
 // getNextJob retrieves the next job from the tubes being watched.
-func (w *Worker) getNextJob(tubes *beanstalk.TubeSet) *RawJob {
+func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 	id, body, err := tubes.Reserve(60 * time.Second)
 	job := &RawJob{
 		id:   id,
@@ -104,19 +113,29 @@ func (w *Worker) getNextJob(tubes *beanstalk.TubeSet) *RawJob {
 	}
 
 	if err != nil {
-		return job
+		w.sendJobResult(jobCh, job)
+		return
 	}
 
 	//Look up tube info.
 	stats, err := tubes.Conn.StatsJob(job.id)
 	if err != nil {
 		job.err = err
-		return job
+		w.sendJobResult(jobCh, job)
+		return
 	}
 
 	job.tube = stats["tube"]
+	w.sendJobResult(jobCh, job)
+}
 
-	return job
+// sendJobResult sends the job data back to the worker using a non-blocking channel.
+func (w *Worker) sendJobResult(jobCh chan *RawJob, job *RawJob) {
+	//Non-blocking send to channel.
+	select {
+	case jobCh <- job:
+	default:
+	}
 }
 
 // subHandler finds and executes any subcriber function for a job.
