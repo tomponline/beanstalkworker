@@ -1,6 +1,10 @@
 # beanstalkworker
 A helper library for creating beanstalkd consumer processes.
 
+## Usage
+
+Please see https://github.com/tomponline/beanstalkworker_demo for examples of how to use this library.
+
 ## Aims
 
 * To provide a generic way for consuming beanstalkd jobs without all of the boiler plate code
@@ -12,17 +16,8 @@ A helper library for creating beanstalkd consumer processes.
 The library is broken down into the following components:
 
 * JobManager interface - represents a way to handle a job's lifecycle.
-* JobAccessor interface - represents a way to access a job's decoded data fields.
-
 * RawJob - an implementation of JobManager for managing a Raw job's life cycle.
-* JSONJob - an implementation of JobManager for managing a JSON job's life cycle.
-
 * Worker - an implementation of a beanstalkd client process that consumes raw jobs from one or more tubes. It will automatically reconnect to beanstalkd server if it loses the connection.
-* JSONCmdWorker - an implementation of a Raw job handler that can configure the Worker to pass Raw jobs to it to be decoded.
-
-## Usage
-
-Please see https://github.com/tomponline/beanstalkworker_demo for examples of how to use this library.
 
 ## See also
 
