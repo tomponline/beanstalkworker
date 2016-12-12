@@ -24,6 +24,7 @@ func NewWorker(addr string) *Worker {
 	}
 }
 
+// Subcribe adds a handler function to be run for jobs coming from a particular tube.
 func (w *Worker) Subscribe(tube string, cb Handler) {
 	w.tubeSubs[tube] = func(job *RawJob) {
 		jobVal := reflect.ValueOf(job)
