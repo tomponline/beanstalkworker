@@ -117,10 +117,10 @@ func (w *Worker) getNextJob(tubes *beanstalk.TubeSet) *RawJob {
 	return job
 }
 
+// subHandler finds and executes any subcriber function for a job.
 func (w *Worker) subHandler(job *RawJob) {
-	for tube, cb := range w.tubeSubs {
-		if tube == job.GetTube() {
-			cb(job)
-		}
+	tube := job.GetTube()
+	if cb, ok := w.tubeSubs[tube]; ok {
+		cb(job)
 	}
 }
