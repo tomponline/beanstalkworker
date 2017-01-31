@@ -113,7 +113,7 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 	}
 
 	if err != nil {
-		w.sendJobResult(jobCh, job)
+		jobCh <- job
 		return
 	}
 
@@ -121,21 +121,12 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 	stats, err := tubes.Conn.StatsJob(job.id)
 	if err != nil {
 		job.err = err
-		w.sendJobResult(jobCh, job)
+		jobCh <- job
 		return
 	}
 
 	job.tube = stats["tube"]
-	w.sendJobResult(jobCh, job)
-}
-
-// sendJobResult sends the job data back to the worker using a non-blocking channel.
-func (w *Worker) sendJobResult(jobCh chan *RawJob, job *RawJob) {
-	//Non-blocking send to channel.
-	select {
-	case jobCh <- job:
-	default:
-	}
+	jobCh <- job
 }
 
 // subHandler finds and executes any subcriber function for a job.
