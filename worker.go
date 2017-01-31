@@ -53,6 +53,13 @@ func (w *Worker) Subscribe(tube string, cb Handler) {
 // the beanstalkd server.
 func (w *Worker) Run(ctx context.Context) {
 	for {
+		//Check the process hasn't been cancelled whilst we are connecting.
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
 		conn, err := beanstalk.Dial("tcp", w.addr)
 		if err != nil {
 			log.Print("Error connecting to beanstalkd: ", err)
