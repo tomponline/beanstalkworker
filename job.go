@@ -8,8 +8,8 @@ type JobManager interface {
 	Release()
 	LogError(a ...interface{})
 	LogInfo(a ...interface{})
-	GetAge() (time.Duration, error)
-	GetPriority() (uint32, error)
+	GetAge() (time.Duration)
+	GetPriority() uint32
 	GetTube() string
 	SetReturnPriority(prio uint32)
 	SetReturnDelay(delay time.Duration)

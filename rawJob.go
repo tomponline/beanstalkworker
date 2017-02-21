@@ -1,6 +1,5 @@
 package beanstalkworker
 
-import "strconv"
 import "time"
 import "github.com/kr/beanstalk"
 import "fmt"
@@ -12,7 +11,9 @@ type RawJob struct {
 	err         error
 	body        *[]byte
 	conn        *beanstalk.Conn
-	stats       map[string]string
+	tube        string
+	prio        uint32
+	age         time.Duration
 	returnPrio  uint32
 	returnDelay time.Duration
 }
@@ -49,36 +50,26 @@ func (job *RawJob) SetReturnDelay(delay time.Duration) {
 }
 
 // GetAge gets the age of the job from the job stats.
-func (job *RawJob) GetAge() (time.Duration, error) {
-	age, err := strconv.Atoi(job.stats["age"])
-	if err != nil {
-		return 0, err
-	}
-
-	return time.Duration(age) * time.Second, nil
+func (job *RawJob) GetAge() time.Duration {
+	return job.age
 }
 
 // GetPriority gets the priority of the job.
-func (job *RawJob) GetPriority() (uint32, error) {
-	prio, err := strconv.Atoi(job.stats["age"])
-	if err != nil {
-		return 0, err
-	}
-
-	return uint32(prio), nil
+func (job *RawJob) GetPriority() uint32 {
+	return job.prio
 }
 
 // GetTube returns the tube name we got this job from.
 func (job *RawJob) GetTube() string {
-	return job.stats["tube"]
+	return job.tube
 }
 
 // LogError function logs an error messagge regarding the job.
 func (job *RawJob) LogError(a ...interface{}) {
-	log.Print("Tube: ", job.GetTube(), ", Job: ", job.id, ": Error: ", fmt.Sprint(a...))
+	log.Print("Tube: ", job.tube, ", Job: ", job.id, ": Error: ", fmt.Sprint(a...))
 }
 
 // LogInfo function logs an info messagge regarding the job.
 func (job *RawJob) LogInfo(a ...interface{}) {
-	log.Print("Tube: ", job.GetTube(), ", Job: ", job.id, ": ", fmt.Sprint(a...))
+	log.Print("Tube: ", job.tube, ", Job: ", job.id, ": ", fmt.Sprint(a...))
 }

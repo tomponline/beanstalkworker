@@ -6,6 +6,7 @@ import "github.com/kr/beanstalk"
 import "encoding/json"
 import "reflect"
 import "context"
+import "strconv"
 
 // Handler provides an interface type for callback functions.
 type Handler interface{}
@@ -117,7 +118,7 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 		body:        &body,
 		err:         err,
 		conn:        tubes.Conn,
-		returnDelay: 30 * time.Second, //Default return delay of 30s.
+		returnDelay: time.Duration(30) * time.Second, //Default return delay of 30s.
 	}
 
 	if err != nil {
@@ -125,20 +126,35 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 		return
 	}
 
-	//Look up job stats and cache inside job.
-	job.stats, err = tubes.Conn.StatsJob(job.id)
+	//Look up job stats.
+	stats, err := tubes.Conn.StatsJob(job.id)
 	if err != nil {
 		job.err = err
 		jobCh <- job
 		return
 	}
+
+	///Convert string age into time.Duration and cache in job.
+	age, err := strconv.Atoi(stats["age"])
+	if err != nil {
+		job.err = err
+		jobCh <- job
+		return
+	}
+
+	job.age = time.Duration(age) * time.Second
+
+	//Convert string priority into uint32 and cache in job.
+	prio, err := strconv.Atoi(stats["pri"])
+	if err != nil {
+		job.err = err
+		jobCh <- job
+		return
+	}
+	job.prio = uint32(prio)
 
 	//Initialise the return priority as the current priority.
-	if job.returnPrio, err = job.GetPriority(); err != nil {
-		job.err = err
-		jobCh <- job
-		return
-	}
+	job.returnPrio = job.prio
 
 	//Send the job to the receiver channel.
 	jobCh <- job
