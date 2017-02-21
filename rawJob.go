@@ -40,14 +40,13 @@ func (job *RawJob) Bury() {
 
 // SetReturnPriority sets the return priority to use if a job is released or buried.
 func (job *RawJob) SetReturnPriority(prio uint32) {
-    job.returnPrio = prio
+	job.returnPrio = prio
 }
 
 // SetReturnDelay sets the return delay to use if a job is released back to queue.
 func (job *RawJob) SetReturnDelay(delay time.Duration) {
-    job.returnDelay = delay
+	job.returnDelay = delay
 }
-
 
 // GetAge gets the age of the job from the job stats.
 func (job *RawJob) GetAge() (time.Duration, error) {
