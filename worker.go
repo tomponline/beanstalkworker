@@ -113,10 +113,11 @@ func (w *Worker) Run(ctx context.Context) {
 func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 	id, body, err := tubes.Reserve(60 * time.Second)
 	job := &RawJob{
-		id:   id,
-		body: &body,
-		err:  err,
-		conn: tubes.Conn,
+		id:          id,
+		body:        &body,
+		err:         err,
+		conn:        tubes.Conn,
+		returnDelay: 30 * time.Second, //Default return delay of 30s.
 	}
 
 	if err != nil {
@@ -124,15 +125,22 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 		return
 	}
 
-	//Look up tube info.
-	stats, err := tubes.Conn.StatsJob(job.id)
+	//Look up job stats and cache inside job.
+	job.stats, err = tubes.Conn.StatsJob(job.id)
 	if err != nil {
 		job.err = err
 		jobCh <- job
 		return
 	}
 
-	job.tube = stats["tube"]
+	//Initialise the return priority as the current priority.
+	if job.returnPrio, err = job.GetPriority(); err != nil {
+		job.err = err
+		jobCh <- job
+		return
+	}
+
+	//Send the job to the receiver channel.
 	jobCh <- job
 }
 
