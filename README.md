@@ -3,7 +3,7 @@ A helper library for creating beanstalkd consumer processes.
 
 ## Usage
 
- go get -u github.com/tomponline/beanstalkworker/beanstalkworker
+```go get -u github.com/tomponline/beanstalkworker/beanstalkworker```
 
 Please see beanstalkworker_demo folder for examples of how to use this library.
 

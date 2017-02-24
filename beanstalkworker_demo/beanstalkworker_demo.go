@@ -1,6 +1,6 @@
 package main
 
-import "github.com/tomponline/beanstalkworker"
+import "github.com/tomponline/beanstalkworker/beanstalkworker"
 import "context"
 import "os"
 import "os/signal"
@@ -27,7 +27,7 @@ func main() {
 	bsWorker.Run(ctx)
 }
 
-// NewJob1Handler providdes a handler for the "Job1" command type.
+// NewJob1Handler provides a handler for the "Job1" command type.
 func NewJob1Handler(job beanstalkworker.JobManager, jobData map[string]string) {
 	job.LogInfo("Test job 1 callback: ", jobData, job.GetTube())
 	time.Sleep(15 * time.Second)
@@ -35,7 +35,7 @@ func NewJob1Handler(job beanstalkworker.JobManager, jobData map[string]string) {
 	job.Delete() //Finished process job, delete from queue.
 }
 
-// NewJob2Handler providdes a handler for the "Job2" command type.
+// NewJob2Handler provides a handler for the "Job2" command type.
 func NewJob2Handler(job beanstalkworker.JobManager, jobData Job2) {
 	job.LogInfo("Test job 2 callback: ", jobData, job.GetPriority(), job.GetAge())
 	job.SetReturnPriority(1023)
