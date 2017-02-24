@@ -13,6 +13,7 @@ type RawJob struct {
 	conn        *beanstalk.Conn
 	tube        string
 	prio        uint32
+	releases    uint32
 	age         time.Duration
 	returnPrio  uint32
 	returnDelay time.Duration
@@ -57,6 +58,11 @@ func (job *RawJob) GetAge() time.Duration {
 // GetPriority gets the priority of the job.
 func (job *RawJob) GetPriority() uint32 {
 	return job.prio
+}
+
+// GetReleases gets the count of release of the job.
+func (job *RawJob) GetReleases() uint32 {
+	return job.releases
 }
 
 // GetTube returns the tube name we got this job from.

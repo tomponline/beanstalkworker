@@ -159,6 +159,15 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 	//Initialise the return priority as the current priority.
 	job.returnPrio = job.prio
 
+	//Convert string releases into uint32 and cache in job.
+	releases, err := strconv.Atoi(stats["releases"])
+	if err != nil {
+		job.err = err
+		jobCh <- job
+		return
+	}
+	job.releases = uint32(releases)
+
 	//Send the job to the receiver channel.
 	jobCh <- job
 }

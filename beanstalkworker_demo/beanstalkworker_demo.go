@@ -18,7 +18,7 @@ func main() {
 	bsWorker := beanstalkworker.NewWorker("127.0.0.1:11300")
 
 	//Define a common value (example a shared database connection)
-	commonVar := "some common state/value for all job handler types"
+	commonVar := "some common value"
 
 	//Add one or more subcriptions to specific tubes with a handler function.
 	bsWorker.Subscribe("job1", func(jobMgr beanstalkworker.JobManager, jobData Job1Data) {

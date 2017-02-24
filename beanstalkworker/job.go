@@ -10,6 +10,7 @@ type JobManager interface {
 	LogInfo(a ...interface{})
 	GetAge() time.Duration
 	GetPriority() uint32
+	GetReleases() uint32
 	GetTube() string
 	SetReturnPriority(prio uint32)
 	SetReturnDelay(delay time.Duration)
