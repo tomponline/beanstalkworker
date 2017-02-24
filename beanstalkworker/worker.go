@@ -114,11 +114,10 @@ func (w *Worker) Run(ctx context.Context) {
 func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 	id, body, err := tubes.Reserve(60 * time.Second)
 	job := &RawJob{
-		id:          id,
-		body:        &body,
-		err:         err,
-		conn:        tubes.Conn,
-		returnDelay: time.Duration(30) * time.Second, //Default return delay of 30s.
+		id:   id,
+		body: &body,
+		err:  err,
+		conn: tubes.Conn,
 	}
 
 	if err != nil {
@@ -147,6 +146,19 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 
 	job.age = time.Duration(age) * time.Second
 
+	///Convert string delay into time.Duration and cache in job.
+	delay, err := strconv.Atoi(stats["delay"])
+	if err != nil {
+		job.err = err
+		jobCh <- job
+		return
+	}
+
+	job.delay = time.Duration(delay) * time.Second
+
+	//Initialise the return delay as the current delay.
+	job.returnPrio = job.prio
+
 	//Convert string priority into uint32 and cache in job.
 	prio, err := strconv.Atoi(stats["pri"])
 	if err != nil {
@@ -167,6 +179,24 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 		return
 	}
 	job.releases = uint32(releases)
+
+	//Convert string reserves into uint32 and cache in job.
+	reserves, err := strconv.Atoi(stats["reserves"])
+	if err != nil {
+		job.err = err
+		jobCh <- job
+		return
+	}
+	job.reserves = uint32(reserves)
+
+	//Convert string timeouts into uint32 and cache in job.
+	timeouts, err := strconv.Atoi(stats["timeouts"])
+	if err != nil {
+		job.err = err
+		jobCh <- job
+		return
+	}
+	job.timeouts = uint32(timeouts)
 
 	//Send the job to the receiver channel.
 	jobCh <- job

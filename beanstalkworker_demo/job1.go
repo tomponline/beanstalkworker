@@ -28,11 +28,19 @@ func (handler *Job1Handler) Run(jobData Job1Data) {
 	handler.LogInfo("Job Data received: ", jobData)
 	handler.LogInfo("Job Priority: ", handler.GetPriority())
 	handler.LogInfo("Job Releases: ", handler.GetReleases())
+	handler.LogInfo("Job Reserves: ", handler.GetReserves())
 	handler.LogInfo("Job Age: ", handler.GetAge())
+	handler.LogInfo("Job Delay: ", handler.GetDelay())
+	handler.LogInfo("Job Timeouts: ", handler.GetTimeouts())
 	handler.LogInfo("Job Tube: ", handler.GetTube())
 	time.Sleep(2 * time.Second)             //Simulate job processing time
 	handler.SetReturnDelay(5 * time.Second) //Optional return delay (defaults to 30s)
 	handler.SetReturnPriority(5)            //Optional return priority (defaults to current priority)
+
+	if handler.GetTimeouts() == 0 {
+		handler.LogInfo("Simulating a timeout by not releasing/deleting job")
+		return
+	}
 
 	if handler.GetReleases() >= 3 {
 		handler.Delete()

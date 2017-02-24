@@ -14,6 +14,9 @@ type RawJob struct {
 	tube        string
 	prio        uint32
 	releases    uint32
+	reserves    uint32
+	timeouts    uint32
+	delay       time.Duration
 	age         time.Duration
 	returnPrio  uint32
 	returnDelay time.Duration
@@ -55,6 +58,11 @@ func (job *RawJob) GetAge() time.Duration {
 	return job.age
 }
 
+// GetDelay gets the delay of the job from the job stats.
+func (job *RawJob) GetDelay() time.Duration {
+	return job.delay
+}
+
 // GetPriority gets the priority of the job.
 func (job *RawJob) GetPriority() uint32 {
 	return job.prio
@@ -63,6 +71,16 @@ func (job *RawJob) GetPriority() uint32 {
 // GetReleases gets the count of release of the job.
 func (job *RawJob) GetReleases() uint32 {
 	return job.releases
+}
+
+// GetReserves gets the count of reserves of the job.
+func (job *RawJob) GetReserves() uint32 {
+	return job.reserves
+}
+
+// GetTimeouts gets the count of timeouts of the job.
+func (job *RawJob) GetTimeouts() uint32 {
+	return job.timeouts
 }
 
 // GetTube returns the tube name we got this job from.
