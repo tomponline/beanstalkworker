@@ -41,7 +41,7 @@ func (w *Worker) Subscribe(tube string, cb Handler) {
 		dataPtr := reflect.New(dataType)
 
 		if err := json.Unmarshal(*job.body, dataPtr.Interface()); err != nil {
-			job.LogError("Error decoding JSON for job: ", err, ", releasing...")
+			job.LogError("Error decoding JSON for job: ", err, ", '", string(*job.body), "', releasing...")
 			job.Release()
 			return
 		}
@@ -133,6 +133,9 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 		jobCh <- job
 		return
 	}
+
+	//Cache tube job was received from in the job.
+	job.tube = stats["tube"]
 
 	///Convert string age into time.Duration and cache in job.
 	age, err := strconv.Atoi(stats["age"])

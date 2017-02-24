@@ -6,11 +6,6 @@ import "os"
 import "os/signal"
 import "syscall"
 import "log"
-import "time"
-
-type Job2 struct {
-	Cmd string `json:"cmd"`
-}
 
 func main() {
 	//Setup context for cancelling beanstalk worker.
@@ -19,28 +14,26 @@ func main() {
 	//Start up signal handler that will cleanly shutdown beanstalk worker.
 	go signalHandler(cancel)
 
-	//Define a new worker process, how to connect to the beanstalkd server,
-	//and which tubes to watch.
+	//Define a new worker process - how to connect to the beanstalkd server.
 	bsWorker := beanstalkworker.NewWorker("127.0.0.1:11300")
-	bsWorker.Subscribe("Job1", NewJob1Handler)
-	bsWorker.Subscribe("Job2", NewJob2Handler)
+
+	//Define a common value (example a shared database connection)
+	commonVar := "some common state/value for all job handler types"
+
+	//Add one or more subcriptions to specific tubes with a handler function.
+	bsWorker.Subscribe("job1", func(jobMgr beanstalkworker.JobManager, jobData Job1Data) {
+		//Create a fresh handler struct per job (this ensures fresh state for each job).
+		handler := &Job1Handler{
+			JobManager: jobMgr,    //Embed the JobManager into the handler.
+			commonVar:  commonVar, //Pass the commonVar into the handler.
+		}
+
+		handler.Run(jobData)
+	})
+
+	//Run the beanstalk worker, this blocks until the context is cancelled.
+	//It will also handle reconnecting to beanstalkd server automatically.
 	bsWorker.Run(ctx)
-}
-
-// NewJob1Handler provides a handler for the "Job1" command type.
-func NewJob1Handler(job beanstalkworker.JobManager, jobData map[string]string) {
-	job.LogInfo("Test job 1 callback: ", jobData, job.GetTube())
-	time.Sleep(15 * time.Second)
-	job.LogInfo("Finished!")
-	job.Delete() //Finished process job, delete from queue.
-}
-
-// NewJob2Handler provides a handler for the "Job2" command type.
-func NewJob2Handler(job beanstalkworker.JobManager, jobData Job2) {
-	job.LogInfo("Test job 2 callback: ", jobData, job.GetPriority(), job.GetAge())
-	job.SetReturnPriority(1023)
-	job.SetReturnDelay(time.Second * 60)
-	job.Release() //Something is wrong, release job back for processing later.
 }
 
 func signalHandler(cancel context.CancelFunc) {
