@@ -11,6 +11,9 @@ type JobManager interface {
 	GetAge() time.Duration
 	GetPriority() uint32
 	GetReleases() uint32
+	GetReserves() uint32
+	GetTimeouts() uint32
+	GetDelay() time.Duration
 	GetTube() string
 	SetReturnPriority(prio uint32)
 	SetReturnDelay(delay time.Duration)
