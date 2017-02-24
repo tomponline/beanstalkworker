@@ -1,21 +1,22 @@
 package beanstalkworker
 
-import "strconv"
 import "time"
 import "github.com/kr/beanstalk"
 import "fmt"
 import "log"
 
-// PrioLow is the priority that jobs are released/buried with.
-const PrioLow = 1025
-
 // RawJob represents the raw job data that is returned by beanstalkd.
 type RawJob struct {
-	id   uint64
-	err  error
-	body *[]byte
-	conn *beanstalk.Conn
-	tube string
+	id          uint64
+	err         error
+	body        *[]byte
+	conn        *beanstalk.Conn
+	tube        string
+	prio        uint32
+	releases    uint32
+	age         time.Duration
+	returnPrio  uint32
+	returnDelay time.Duration
 }
 
 // Delete function deletes the job from the queue.
@@ -27,31 +28,41 @@ func (job *RawJob) Delete() {
 
 // Release function releases the job from the queue.
 func (job *RawJob) Release() {
-	if err := job.conn.Release(job.id, PrioLow, 30*time.Second); err != nil {
+	if err := job.conn.Release(job.id, job.returnPrio, job.returnDelay); err != nil {
 		job.LogError("Could not release job: " + err.Error())
 	}
 }
 
 // Bury function buries the job from the queue.
 func (job *RawJob) Bury() {
-	if err := job.conn.Bury(job.id, PrioLow); err != nil {
+	if err := job.conn.Bury(job.id, job.returnPrio); err != nil {
 		job.LogError("Could not bury job: " + err.Error())
 	}
 }
 
-// GetAge gets the age of the job (in seconds) from the beanstalkd server.
-func (job *RawJob) GetAge() (int, error) {
-	stats, err := job.conn.StatsJob(job.id)
-	if err != nil {
-		return 0, err
-	}
+// SetReturnPriority sets the return priority to use if a job is released or buried.
+func (job *RawJob) SetReturnPriority(prio uint32) {
+	job.returnPrio = prio
+}
 
-	age, err := strconv.Atoi(stats["age"])
-	if err != nil {
-		return 0, err
-	}
+// SetReturnDelay sets the return delay to use if a job is released back to queue.
+func (job *RawJob) SetReturnDelay(delay time.Duration) {
+	job.returnDelay = delay
+}
 
-	return age, nil
+// GetAge gets the age of the job from the job stats.
+func (job *RawJob) GetAge() time.Duration {
+	return job.age
+}
+
+// GetPriority gets the priority of the job.
+func (job *RawJob) GetPriority() uint32 {
+	return job.prio
+}
+
+// GetReleases gets the count of release of the job.
+func (job *RawJob) GetReleases() uint32 {
+	return job.releases
 }
 
 // GetTube returns the tube name we got this job from.

@@ -6,6 +6,7 @@ import "github.com/kr/beanstalk"
 import "encoding/json"
 import "reflect"
 import "context"
+import "strconv"
 
 // Handler provides an interface type for callback functions.
 type Handler interface{}
@@ -40,7 +41,7 @@ func (w *Worker) Subscribe(tube string, cb Handler) {
 		dataPtr := reflect.New(dataType)
 
 		if err := json.Unmarshal(*job.body, dataPtr.Interface()); err != nil {
-			job.LogError("Error decoding JSON for job: ", err, ", releasing...")
+			job.LogError("Error decoding JSON for job: ", err, ", '", string(*job.body), "', releasing...")
 			job.Release()
 			return
 		}
@@ -113,10 +114,11 @@ func (w *Worker) Run(ctx context.Context) {
 func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 	id, body, err := tubes.Reserve(60 * time.Second)
 	job := &RawJob{
-		id:   id,
-		body: &body,
-		err:  err,
-		conn: tubes.Conn,
+		id:          id,
+		body:        &body,
+		err:         err,
+		conn:        tubes.Conn,
+		returnDelay: time.Duration(30) * time.Second, //Default return delay of 30s.
 	}
 
 	if err != nil {
@@ -124,7 +126,7 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 		return
 	}
 
-	//Look up tube info.
+	//Look up job stats.
 	stats, err := tubes.Conn.StatsJob(job.id)
 	if err != nil {
 		job.err = err
@@ -132,7 +134,41 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 		return
 	}
 
+	//Cache tube job was received from in the job.
 	job.tube = stats["tube"]
+
+	///Convert string age into time.Duration and cache in job.
+	age, err := strconv.Atoi(stats["age"])
+	if err != nil {
+		job.err = err
+		jobCh <- job
+		return
+	}
+
+	job.age = time.Duration(age) * time.Second
+
+	//Convert string priority into uint32 and cache in job.
+	prio, err := strconv.Atoi(stats["pri"])
+	if err != nil {
+		job.err = err
+		jobCh <- job
+		return
+	}
+	job.prio = uint32(prio)
+
+	//Initialise the return priority as the current priority.
+	job.returnPrio = job.prio
+
+	//Convert string releases into uint32 and cache in job.
+	releases, err := strconv.Atoi(stats["releases"])
+	if err != nil {
+		job.err = err
+		jobCh <- job
+		return
+	}
+	job.releases = uint32(releases)
+
+	//Send the job to the receiver channel.
 	jobCh <- job
 }
 
