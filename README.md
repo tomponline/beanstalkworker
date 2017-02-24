@@ -3,7 +3,9 @@ A helper library for creating beanstalkd consumer processes.
 
 ## Usage
 
-Please see https://github.com/tomponline/beanstalkworker_demo for examples of how to use this library.
+ go get -u github.com/tomponline/beanstalkworker/beanstalkworker
+
+Please see beanstalkworker_demo folder for examples of how to use this library.
 
 ## Aims
 
