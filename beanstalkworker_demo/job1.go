@@ -2,17 +2,27 @@ package main
 
 import "github.com/tomponline/beanstalkworker/beanstalkworker"
 import "time"
+import "fmt"
 
+// Job1Handler contains the business logic to handle the Job1 type jobs.
 type Job1Handler struct {
 	beanstalkworker.JobManager
 	commonVar string
 }
 
+// Job1Data is a struct that represents the Job1 data that arrives from the queue.
 type Job1Data struct {
 	SomeField      string `json:"someField"`
 	SomeOtherField int    `json:"someOtherField"`
 }
 
+// LogError example of overriding a function provided in beanstalkworker.JobManager
+// and calling the underlying function in order to add context.
+func (handler *Job1Handler) LogError(a ...interface{}) {
+	handler.JobManager.LogError("Job1 error: ", fmt.Sprint(a...))
+}
+
+// Run is executed by the beanstalk worker when a Job1 type job is received.
 func (handler *Job1Handler) Run(jobData Job1Data) {
 	handler.LogInfo("Starting job with commonVar value: ", handler.commonVar)
 	handler.LogInfo("Job Data recieved: ", jobData)
@@ -24,9 +34,9 @@ func (handler *Job1Handler) Run(jobData Job1Data) {
 	handler.SetReturnDelay(5 * time.Second) //Optional return delay (defaults to 30s)
 	handler.SetReturnPriority(5)            //Optional return priority (defaults to current priority)
 
-	if handler.GetReleases() > 5 {
+	if handler.GetReleases() >= 3 {
 		handler.Delete()
-		handler.LogInfo("Deleting job as too many releases")
+		handler.LogError("Deleting job as too many releases")
 		return
 	}
 
