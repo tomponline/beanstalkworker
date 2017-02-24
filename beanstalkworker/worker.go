@@ -157,7 +157,7 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 	job.delay = time.Duration(delay) * time.Second
 
 	//Initialise the return delay as the current delay.
-	job.returnPrio = job.prio
+	job.returnDelay = job.delay
 
 	//Convert string priority into uint32 and cache in job.
 	prio, err := strconv.Atoi(stats["pri"])
