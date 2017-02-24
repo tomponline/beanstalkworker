@@ -25,7 +25,7 @@ func (handler *Job1Handler) LogError(a ...interface{}) {
 // Run is executed by the beanstalk worker when a Job1 type job is received.
 func (handler *Job1Handler) Run(jobData Job1Data) {
 	handler.LogInfo("Starting job with commonVar value: ", handler.commonVar)
-	handler.LogInfo("Job Data recieved: ", jobData)
+	handler.LogInfo("Job Data received: ", jobData)
 	handler.LogInfo("Job Priority: ", handler.GetPriority())
 	handler.LogInfo("Job Releases: ", handler.GetReleases())
 	handler.LogInfo("Job Age: ", handler.GetAge())
