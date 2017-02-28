@@ -1,6 +1,7 @@
 package beanstalkworker
 
 import "time"
+import "github.com/kr/beanstalk"
 
 // JobManager interface represents a way to handle a job's lifecycle.
 type JobManager interface {
@@ -15,6 +16,7 @@ type JobManager interface {
 	GetTimeouts() uint32
 	GetDelay() time.Duration
 	GetTube() string
+	GetConn() *beanstalk.Conn
 	SetReturnPriority(prio uint32)
 	SetReturnDelay(delay time.Duration)
 }

@@ -88,6 +88,11 @@ func (job *RawJob) GetTube() string {
 	return job.tube
 }
 
+// GetConn returns the beanstalk connection
+func (job *RawJob) GetConn() *beanstalk.Conn {
+	return job.conn
+}
+
 // LogError function logs an error messagge regarding the job.
 func (job *RawJob) LogError(a ...interface{}) {
 	log.Print("Tube: ", job.tube, ", Job: ", job.id, ": Error: ", fmt.Sprint(a...))
