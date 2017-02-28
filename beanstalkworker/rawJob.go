@@ -88,7 +88,7 @@ func (job *RawJob) GetTube() string {
 	return job.tube
 }
 
-// GetConn returns the beanstalk connection
+// GetConn returns the beakstalk connection used to receive the job.
 func (job *RawJob) GetConn() *beanstalk.Conn {
 	return job.conn
 }
