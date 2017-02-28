@@ -33,7 +33,17 @@ func (handler *Job1Handler) Run(jobData Job1Data) {
 	handler.LogInfo("Job Delay: ", handler.GetDelay())
 	handler.LogInfo("Job Timeouts: ", handler.GetTimeouts())
 	handler.LogInfo("Job Tube: ", handler.GetTube())
-	time.Sleep(2 * time.Second) //Simulate job processing time
+	// Retrieve the server's hostname where the job is running
+	conn := handler.GetConn()
+	stats, err := conn.Stats()
+	if err != nil {
+		handler.Release()
+		return
+	}
+	handler.LogInfo("Hostname: ", stats["hostname"])
+
+	//Simulate job processing time
+	time.Sleep(2 * time.Second)
 
 	if handler.GetTimeouts() == 0 {
 		handler.LogInfo("Simulating a timeout by not releasing/deleting job")
