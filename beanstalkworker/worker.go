@@ -162,7 +162,7 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 	//If the initial returnDelay is 0s, then set to 60s.
 	//This ensures that if job umarshalling fails that we don't get the job
 	//repeatedly re-released without any delay.
-	//If you do need to have a 0s delay, use SetReturnDelay().
+	//If you do need a 0s delay, use SetReturnDelay() in the handler function.
 	if job.returnDelay <= 0 {
 		job.returnDelay = 60 * time.Second
 	}
