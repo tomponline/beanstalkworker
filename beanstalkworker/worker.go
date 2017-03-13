@@ -159,6 +159,14 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 	//Initialise the return delay as the current delay.
 	job.returnDelay = job.delay
 
+	//If the initial returnDelay is 0s, then set to 60s.
+	//This ensures that if job umarshalling fails that we don't get the job
+	//repeatedly re-released without any delay.
+	//If you do need to have a 0s delay, use SetReturnDelay().
+	if job.returnDelay <= 0 {
+		job.returnDelay = 60 * time.Second
+	}
+
 	//Convert string priority into uint32 and cache in job.
 	prio, err := strconv.Atoi(stats["pri"])
 	if err != nil {
