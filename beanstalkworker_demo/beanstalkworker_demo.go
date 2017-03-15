@@ -17,6 +17,9 @@ func main() {
 	//Define a new worker process - how to connect to the beanstalkd server.
 	bsWorker := beanstalkworker.NewWorker("127.0.0.1:11300")
 
+	//Set concurrent worker threads to 2.
+	bsWorker.SetNumWorkers(2)
+
 	//Define a common value (example a shared database connection)
 	commonVar := "some common value"
 
