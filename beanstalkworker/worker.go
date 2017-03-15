@@ -7,6 +7,7 @@ import "encoding/json"
 import "reflect"
 import "context"
 import "strconv"
+import "sync"
 
 // Handler provides an interface type for callback functions.
 type Handler interface{}
@@ -14,8 +15,10 @@ type Handler interface{}
 // Worker represents a single process that is connecting to beanstalkd
 // and is consuming jobs from one or more tubes.
 type Worker struct {
-	addr     string
-	tubeSubs map[string]func(*RawJob)
+	addr       string
+	tubeSubs   map[string]func(*RawJob)
+	numWorkers int
+	wg         sync.WaitGroup
 }
 
 // NewWorker creates a new worker process,
@@ -25,6 +28,12 @@ func NewWorker(addr string) *Worker {
 		addr:     addr,
 		tubeSubs: make(map[string]func(*RawJob)),
 	}
+}
+
+// SetNumWorkers sets the number of concurrent workers threads that should be started.
+// Each thread establishes a separate connection to the beanstalkd server.
+func (w *Worker) SetNumWorkers(numWorkers int) {
+	w.numWorkers = numWorkers
 }
 
 // Subscribe adds a handler function to be run for jobs coming from a particular tube.
@@ -50,9 +59,26 @@ func (w *Worker) Subscribe(tube string, cb Handler) {
 	}
 }
 
-// Run activates the worker and attempts to maintain a connection to
-// the beanstalkd server.
+// Run starts one or more worker threads based on the numWorkers value.
+// If numWorkers is set to zero or less then 1 worker is started.
 func (w *Worker) Run(ctx context.Context) {
+	if w.numWorkers <= 0 {
+		w.numWorkers = 1
+	}
+
+	for i := 0; i < w.numWorkers; i++ {
+		w.wg.Add(1) //Increment wait group count to represent new worker.
+		go w.startWorker(ctx)
+	}
+
+	w.wg.Wait() //Block here until all workers cleanly finish.
+}
+
+// startWorker activates a single worker and attempts to maintain a connection to the beanstalkd server.
+func (w *Worker) startWorker(ctx context.Context) {
+	defer log.Print("Worker stopped!")
+	defer w.wg.Done()
+
 	for {
 		//Check the process hasn't been cancelled whilst we are connecting.
 		select {
