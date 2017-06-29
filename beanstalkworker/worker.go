@@ -87,7 +87,8 @@ func (w *Worker) startWorker(ctx context.Context) {
 		default:
 		}
 
-		conn, err := beanstalk.Dial("tcp", w.addr)
+		connTimeout := time.Duration(10) * time.Second
+		conn, err := beanstalk.DialTimeout("tcp", w.addr, connTimeout)
 		if err != nil {
 			log.Print("Error connecting to beanstalkd: ", err)
 			time.Sleep(5 * time.Second)
