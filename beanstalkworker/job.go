@@ -1,7 +1,7 @@
 package beanstalkworker
 
 import "time"
-import "github.com/kr/beanstalk"
+import "github.com/tomponline/beanstalk"
 
 // JobManager interface represents a way to handle a job's lifecycle.
 type JobManager interface {

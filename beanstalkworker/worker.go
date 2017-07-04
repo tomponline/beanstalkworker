@@ -2,7 +2,7 @@ package beanstalkworker
 
 import "log"
 import "time"
-import "github.com/kr/beanstalk"
+import "github.com/tomponline/beanstalk"
 import "encoding/json"
 import "reflect"
 import "context"
