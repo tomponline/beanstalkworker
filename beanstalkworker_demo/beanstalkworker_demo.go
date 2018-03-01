@@ -1,13 +1,18 @@
 package main
 
-import "github.com/tomponline/beanstalkworker/beanstalkworker"
-import "context"
-import "os"
-import "os/signal"
-import "syscall"
-import "log"
+import (
+	"beanstalkworker/beanstalkworker"
+	"os"
+	"os/signal"
+	"syscall"
+	"context"
+)
+
+var log = beanstalkworker.NewStdLogger()
 
 func main() {
+
+
 	//Setup context for cancelling beanstalk worker.
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -44,7 +49,7 @@ func signalHandler(cancel context.CancelFunc) {
 	signal.Notify(sigc, syscall.SIGHUP, syscall.SIGTERM, syscall.SIGINT)
 	for {
 		<-sigc
-		log.Print("Got signal, cancelling context")
+		log.Info("Got signal, cancelling context")
 		cancel()
 	}
 }
