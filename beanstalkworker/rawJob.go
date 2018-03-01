@@ -3,7 +3,6 @@ package beanstalkworker
 import "time"
 import "github.com/tomponline/beanstalk"
 import "fmt"
-import "log"
 
 // RawJob represents the raw job data that is returned by beanstalkd.
 type RawJob struct {
@@ -20,6 +19,7 @@ type RawJob struct {
 	age         time.Duration
 	returnPrio  uint32
 	returnDelay time.Duration
+	log 		Logger
 }
 
 // Delete function deletes the job from the queue.
@@ -95,10 +95,10 @@ func (job *RawJob) GetConn() *beanstalk.Conn {
 
 // LogError function logs an error messagge regarding the job.
 func (job *RawJob) LogError(a ...interface{}) {
-	log.Print("Tube: ", job.tube, ", Job: ", job.id, ": Error: ", fmt.Sprint(a...))
+	job.log.Info("Tube: ", job.tube, ", Job: ", job.id, ": Error: ", fmt.Sprint(a...))
 }
 
 // LogInfo function logs an info messagge regarding the job.
 func (job *RawJob) LogInfo(a ...interface{}) {
-	log.Print("Tube: ", job.tube, ", Job: ", job.id, ": ", fmt.Sprint(a...))
+	job.log.Info("Tube: ", job.tube, ", Job: ", job.id, ": ", fmt.Sprint(a...))
 }
