@@ -1,6 +1,6 @@
 package main
 
-import "github.com/tomponline/beanstalkworker/beanstalkworker"
+import "beanstalkworker/beanstalkworker"
 import "time"
 import "fmt"
 

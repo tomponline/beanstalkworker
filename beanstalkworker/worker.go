@@ -1,13 +1,14 @@
 package beanstalkworker
 
-import "log"
-import "time"
-import "github.com/tomponline/beanstalk"
-import "encoding/json"
-import "reflect"
-import "context"
-import "strconv"
-import "sync"
+import (
+	"time"
+	"github.com/tomponline/beanstalk"
+	"encoding/json"
+	"reflect"
+	"context"
+	"strconv"
+	"sync"
+)
 
 // Handler provides an interface type for callback functions.
 type Handler interface{}
@@ -19,6 +20,7 @@ type Worker struct {
 	tubeSubs   map[string]func(*RawJob)
 	numWorkers int
 	wg         sync.WaitGroup
+	log        Logger
 }
 
 // NewWorker creates a new worker process,
@@ -27,6 +29,7 @@ func NewWorker(addr string) *Worker {
 	return &Worker{
 		addr:     addr,
 		tubeSubs: make(map[string]func(*RawJob)),
+		log:      NewStdLogger(),
 	}
 }
 
@@ -76,7 +79,7 @@ func (w *Worker) Run(ctx context.Context) {
 
 // startWorker activates a single worker and attempts to maintain a connection to the beanstalkd server.
 func (w *Worker) startWorker(ctx context.Context) {
-	defer log.Print("Worker stopped!")
+	defer w.log.Info("Worker stopped!")
 	defer w.wg.Done()
 
 	for {
@@ -89,7 +92,7 @@ func (w *Worker) startWorker(ctx context.Context) {
 
 		conn, err := beanstalk.Dial("tcp", w.addr)
 		if err != nil {
-			log.Print("Error connecting to beanstalkd: ", err)
+			w.log.Info("Error connecting to beanstalkd: ", err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -101,7 +104,7 @@ func (w *Worker) startWorker(ctx context.Context) {
 			watchTubes = append(watchTubes, tube)
 		}
 		tubes := beanstalk.NewTubeSet(conn, watchTubes...)
-		log.Printf("Connected, watching %v for new jobs", watchTubes)
+		w.log.Infof("Connected, watching %v for new jobs", watchTubes)
 		jobCh := make(chan *RawJob)
 
 	loop:
@@ -124,7 +127,7 @@ func (w *Worker) startWorker(ctx context.Context) {
 					}
 
 					//Some other problem so restart connection to beanstalkd.
-					log.Print("Error getting job from tube: ", job.err)
+					w.log.Info("Error getting job from tube: ", job.err)
 					break loop
 				}
 
@@ -144,6 +147,7 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 		body: &body,
 		err:  err,
 		conn: tubes.Conn,
+		log:  w.log,
 	}
 
 	if err != nil {
