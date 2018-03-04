@@ -23,7 +23,7 @@ type StdLogger struct {
 }
 
 func NewStdLogger() Logger {
-	return &StdLogger{log.New(os.Stdout, "Faktory ", log.LstdFlags)}
+	return &StdLogger{log.New(os.Stdout, "beanstalkworker ", log.LstdFlags)}
 }
 
 func (l *StdLogger) Debug(v ...interface{}) {
