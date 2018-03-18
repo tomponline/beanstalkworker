@@ -1,6 +1,5 @@
 package beanstalkworker
 
-import "log"
 import "time"
 import "github.com/tomponline/beanstalk"
 import "encoding/json"
@@ -19,6 +18,7 @@ type Worker struct {
 	tubeSubs   map[string]func(*RawJob)
 	numWorkers int
 	wg         sync.WaitGroup
+	log        *Logger
 }
 
 // NewWorker creates a new worker process,
@@ -27,6 +27,7 @@ func NewWorker(addr string) *Worker {
 	return &Worker{
 		addr:     addr,
 		tubeSubs: make(map[string]func(*RawJob)),
+		log:      NewDefaultLogger(),
 	}
 }
 
@@ -34,6 +35,14 @@ func NewWorker(addr string) *Worker {
 // Each thread establishes a separate connection to the beanstalkd server.
 func (w *Worker) SetNumWorkers(numWorkers int) {
 	w.numWorkers = numWorkers
+}
+
+// SetLogger switches logging to use a custom Logger.
+func (w *Worker) SetLogger(cl CustomLogger) {
+	w.log.Info = cl.Info
+	w.log.Infof = cl.Infof
+	w.log.Error = cl.Error
+	w.log.Errorf = cl.Errorf
 }
 
 // Subscribe adds a handler function to be run for jobs coming from a particular tube.
@@ -66,6 +75,11 @@ func (w *Worker) Run(ctx context.Context) {
 		w.numWorkers = 1
 	}
 
+	if len(w.tubeSubs) <= 0 {
+		w.log.Error("No job subscriptions defined, cannot proceed.")
+		return
+	}
+
 	for i := 0; i < w.numWorkers; i++ {
 		w.wg.Add(1) //Increment wait group count to represent new worker.
 		go w.startWorker(ctx)
@@ -76,7 +90,7 @@ func (w *Worker) Run(ctx context.Context) {
 
 // startWorker activates a single worker and attempts to maintain a connection to the beanstalkd server.
 func (w *Worker) startWorker(ctx context.Context) {
-	defer log.Print("Worker stopped!")
+	defer w.log.Info("Worker stopped!")
 	defer w.wg.Done()
 
 	for {
@@ -89,7 +103,7 @@ func (w *Worker) startWorker(ctx context.Context) {
 
 		conn, err := beanstalk.Dial("tcp", w.addr)
 		if err != nil {
-			log.Print("Error connecting to beanstalkd: ", err)
+			w.log.Error("Error connecting to beanstalkd: ", err)
 			time.Sleep(5 * time.Second)
 			continue
 		}
@@ -101,7 +115,7 @@ func (w *Worker) startWorker(ctx context.Context) {
 			watchTubes = append(watchTubes, tube)
 		}
 		tubes := beanstalk.NewTubeSet(conn, watchTubes...)
-		log.Printf("Connected, watching %v for new jobs", watchTubes)
+		w.log.Infof("Connected, watching %v for new jobs", watchTubes)
 		jobCh := make(chan *RawJob)
 
 	loop:
@@ -124,7 +138,7 @@ func (w *Worker) startWorker(ctx context.Context) {
 					}
 
 					//Some other problem so restart connection to beanstalkd.
-					log.Print("Error getting job from tube: ", job.err)
+					w.log.Error("Error getting job from tube: ", job.err)
 					break loop
 				}
 
@@ -144,6 +158,7 @@ func (w *Worker) getNextJob(jobCh chan *RawJob, tubes *beanstalk.TubeSet) {
 		body: &body,
 		err:  err,
 		conn: tubes.Conn,
+		log:  w.log,
 	}
 
 	if err != nil {
