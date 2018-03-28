@@ -6,6 +6,7 @@ import "os"
 import "os/signal"
 import "syscall"
 import "log"
+import "fmt"
 
 func main() {
 	//Setup context for cancelling beanstalk worker.
@@ -16,6 +17,9 @@ func main() {
 
 	//Define a new worker process - how to connect to the beanstalkd server.
 	bsWorker := beanstalkworker.NewWorker("127.0.0.1:11300")
+
+	//Optional custom logger - see below.
+	bsWorker.SetLogger(&MyLogger{})
 
 	//Set concurrent worker threads to 2.
 	bsWorker.SetNumWorkers(2)
@@ -47,4 +51,27 @@ func signalHandler(cancel context.CancelFunc) {
 		log.Print("Got signal, cancelling context")
 		cancel()
 	}
+}
+
+//Custom Logging Example
+
+type MyLogger struct {
+}
+
+func (l *MyLogger) Info(v ...interface{}) {
+	log.Print("MyInfo: ", fmt.Sprint(v...))
+}
+
+func (l *MyLogger) Infof(format string, v ...interface{}) {
+	format = "MyInfof: " + format
+	log.Print(fmt.Sprintf(format, v...))
+}
+
+func (l *MyLogger) Error(v ...interface{}) {
+	log.Print("MyError: ", fmt.Sprint(v...))
+}
+
+func (l *MyLogger) Errorf(format string, v ...interface{}) {
+	format = "MyErrorf: " + format
+	log.Print(fmt.Sprintf(format, v...))
 }
