@@ -93,12 +93,20 @@ func (job *RawJob) GetConn() *beanstalk.Conn {
 	return job.conn
 }
 
-// LogError function logs an error messagge regarding the job.
+// LogError function logs an error message regarding the job.
 func (job *RawJob) LogError(a ...interface{}) {
 	job.log.Error("Tube: ", job.tube, ", Job: ", job.id, ": Error: ", fmt.Sprint(a...))
 }
 
-// LogInfo function logs an info messagge regarding the job.
+// LogInfo function logs an info message regarding the job.
 func (job *RawJob) LogInfo(a ...interface{}) {
 	job.log.Info("Tube: ", job.tube, ", Job: ", job.id, ": ", fmt.Sprint(a...))
+}
+
+// SetLogger switches the jobs logger to a custom logger.
+func (job *RawJob) SetLogger(l Logger) {
+	job.log.Error = l.Error
+	job.log.Errorf = l.Errorf
+	job.log.Info = l.Info
+	job.log.Infof = l.Infof
 }
