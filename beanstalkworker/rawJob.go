@@ -104,9 +104,9 @@ func (job *RawJob) LogInfo(a ...interface{}) {
 }
 
 // SetLogger switches the jobs logger to a custom logger.
-func (job *RawJob) SetLogger(l Logger) {
-	job.log.Error = l.Error
-	job.log.Errorf = l.Errorf
-	job.log.Info = l.Info
-	job.log.Infof = l.Infof
+func (job *RawJob) SetLogger(cl CustomLogger) {
+	job.log.Error = cl.Error
+	job.log.Errorf = cl.Errorf
+	job.log.Info = cl.Info
+	job.log.Infof = cl.Infof
 }
