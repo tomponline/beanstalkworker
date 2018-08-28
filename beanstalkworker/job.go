@@ -19,4 +19,5 @@ type JobManager interface {
 	GetConn() *beanstalk.Conn
 	SetReturnPriority(prio uint32)
 	SetReturnDelay(delay time.Duration)
+	SetLogger(cl CustomLogger)
 }
