@@ -22,6 +22,21 @@ type RawJob struct {
 	log         *Logger
 }
 
+// Initialise a new empty RawJob with a custom logger
+// Useful for testing methods that log messages on the job
+func NewEmptyJob(cl CustomLogger) *RawJob {
+	logger := &Logger{
+		Info:   cl.Info,
+		Infof:  cl.Infof,
+		Error:  cl.Error,
+		Errorf: cl.Errorf,
+	}
+
+	return &RawJob{
+		log: logger,
+	}
+}
+
 // Delete function deletes the job from the queue.
 func (job *RawJob) Delete() {
 	if err := job.conn.Delete(job.id); err != nil {
@@ -101,12 +116,4 @@ func (job *RawJob) LogError(a ...interface{}) {
 // LogInfo function logs an info message regarding the job.
 func (job *RawJob) LogInfo(a ...interface{}) {
 	job.log.Info("Tube: ", job.tube, ", Job: ", job.id, ": ", fmt.Sprint(a...))
-}
-
-// SetLogger switches the jobs logger to a custom logger.
-func (job *RawJob) SetLogger(cl CustomLogger) {
-	job.log.Error = cl.Error
-	job.log.Errorf = cl.Errorf
-	job.log.Info = cl.Info
-	job.log.Infof = cl.Infof
 }
