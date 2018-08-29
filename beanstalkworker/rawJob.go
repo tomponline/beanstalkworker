@@ -22,6 +22,13 @@ type RawJob struct {
 	log         *Logger
 }
 
+// Initialise a new RawJob with default logger set
+func NewRawJob() *RawJob {
+	return &RawJob{
+		log: NewDefaultLogger(),
+	}
+}
+
 // Delete function deletes the job from the queue.
 func (job *RawJob) Delete() {
 	if err := job.conn.Delete(job.id); err != nil {
