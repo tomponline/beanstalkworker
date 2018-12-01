@@ -1,12 +1,14 @@
 package beanstalkworker
 
-import "time"
-import "github.com/tomponline/beanstalk"
-import "encoding/json"
-import "reflect"
-import "context"
-import "strconv"
-import "sync"
+import (
+	"context"
+	"encoding/json"
+	"github.com/tomponline/beanstalk"
+	"reflect"
+	"strconv"
+	"sync"
+	"time"
+)
 
 // Handler provides an interface type for callback functions.
 type Handler interface{}
