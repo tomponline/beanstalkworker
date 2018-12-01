@@ -4,6 +4,13 @@ import "time"
 import "github.com/tomponline/beanstalk"
 import "fmt"
 
+const (
+	// Actions the user can choose in case of an unmarshal error.
+	ActionDeleteJob  = "Delete"
+	ActionBuryJob    = "Bury"
+	ActionReleaseJob = "Release"
+)
+
 // RawJob represents the raw job data that is returned by beanstalkd.
 type RawJob struct {
 	id          uint64
