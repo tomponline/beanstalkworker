@@ -93,6 +93,13 @@ func (w *Worker) Run(ctx context.Context) {
 	w.wg.Wait() //Block here until all workers cleanly finish.
 }
 
+// SetUnmarshalErrorAction defines what to do if there is an unmarshal error.
+func (w *Worker) SetUnmarshalErrorAction(action string) {
+	// If this action is different than Delete, Bury or Release, the last one will be chosen
+	// as the default action in case of an unmarshal error, via the method job.unmarshalErrorHandling.
+	w.unmarshalErrorAction = action
+}
+
 // startWorker activates a single worker and attempts to maintain a connection to the beanstalkd server.
 func (w *Worker) startWorker(ctx context.Context) {
 	defer w.log.Info("Worker stopped!")
