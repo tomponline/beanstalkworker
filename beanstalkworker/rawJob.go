@@ -124,3 +124,17 @@ func (job *RawJob) LogError(a ...interface{}) {
 func (job *RawJob) LogInfo(a ...interface{}) {
 	job.log.Info("Tube: ", job.tube, ", Job: ", job.id, ": ", fmt.Sprint(a...))
 }
+
+// unmarshalErrorAction handles unmarshal error, depending on the user choice
+func (job *RawJob) unmarshalErrorAction(unmarshalErrorAction string) {
+	switch unmarshalErrorAction {
+	case ActionDeleteJob:
+		job.Delete()
+	case ActionBuryJob:
+		job.Bury()
+	default:
+		// Release as the default option as this would be the safest option for the user.
+		// We don't want someone to have some jobs being deleted if they are not aware of it.
+		job.Release()
+	}
+}
