@@ -97,6 +97,10 @@ func (w *Worker) Run(ctx context.Context) {
 func (w *Worker) SetUnmarshalErrorAction(action string) {
 	// If this action is different than Delete, Bury or Release, the last one will be chosen
 	// as the default action in case of an unmarshal error, via the method job.unmarshalErrorHandling.
+	if action != ActionDeleteJob && action != ActionBuryJob {
+		w.unmarshalErrorAction = ActionReleaseJob // By safety only and to keep log message conistent with the action
+		return
+	}
 	w.unmarshalErrorAction = action
 }
 
