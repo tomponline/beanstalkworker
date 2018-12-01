@@ -16,20 +16,22 @@ type Handler interface{}
 // Worker represents a single process that is connecting to beanstalkd
 // and is consuming jobs from one or more tubes.
 type Worker struct {
-	addr       string
-	tubeSubs   map[string]func(*RawJob)
-	numWorkers int
-	wg         sync.WaitGroup
-	log        *Logger
+	addr                 string
+	tubeSubs             map[string]func(*RawJob)
+	numWorkers           int
+	wg                   sync.WaitGroup
+	log                  *Logger
+	unmarshalErrorAction string
 }
 
 // NewWorker creates a new worker process,
 // but does not actually connect to beanstalkd server yet.
 func NewWorker(addr string) *Worker {
 	return &Worker{
-		addr:     addr,
-		tubeSubs: make(map[string]func(*RawJob)),
-		log:      NewDefaultLogger(),
+		addr:                 addr,
+		tubeSubs:             make(map[string]func(*RawJob)),
+		log:                  NewDefaultLogger(),
+		unmarshalErrorAction: ActionReleaseJob, // It ensures the job is released to the queue by default for unmarshal error
 	}
 }
 
