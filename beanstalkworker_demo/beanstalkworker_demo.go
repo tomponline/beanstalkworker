@@ -24,6 +24,10 @@ func main() {
 	//Set concurrent worker threads to 2.
 	bsWorker.SetNumWorkers(2)
 
+	//Job is deleted from the queue if unmarshal error appears. We can
+	//decide to bury or release (default behaviour) it as well.
+	bsWorker.SetUnmarshalErrorAction(beanstalkworker.ActionDeleteJob)
+
 	//Define a common value (example a shared database connection)
 	commonVar := "some common value"
 
