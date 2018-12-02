@@ -6,9 +6,9 @@ import "fmt"
 
 // Actions the user can choose in case of an unmarshal error.
 const (
-	ActionDeleteJob  = "Delete"
-	ActionBuryJob    = "Bury"
-	ActionReleaseJob = "Release"
+	ActionDeleteJob  = "delete"
+	ActionBuryJob    = "bury"
+	ActionReleaseJob = "release"
 )
 
 // RawJob represents the raw job data that is returned by beanstalkd.
