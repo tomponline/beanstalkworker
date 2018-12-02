@@ -20,4 +20,4 @@ Give as many relevant details you can, such as:
 3. Ensure [golint](https://github.com/golang/lint) and [go vet](https://golang.org/cmd/vet/) are not complaining
 4. Document your changes, by updating the beanstalkworker example, README.md and comments in the code
 5. Use [gofmt](https://blog.golang.org/go-fmt-your-code) before committing
-6. commit small, commit often (with meaningful messages)
+6. Commit small, commit often (with meaningful messages)
