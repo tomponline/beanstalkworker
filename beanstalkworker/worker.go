@@ -31,7 +31,7 @@ func NewWorker(addr string) *Worker {
 		addr:                 addr,
 		tubeSubs:             make(map[string]func(*RawJob)),
 		log:                  NewDefaultLogger(),
-		unmarshalErrorAction: ActionReleaseJob, // It ensures the job is released to the queue by default for unmarshal error
+		unmarshalErrorAction: ActionReleaseJob, // It ensures the job is released to the queue by default for unmarshal error.
 	}
 }
 
