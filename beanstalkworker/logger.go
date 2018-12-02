@@ -2,7 +2,7 @@ package beanstalkworker
 
 import "log"
 
-// CustomLogger provides support for the creation of custom logging
+// CustomLogger provides support for the creation of custom logging.
 type CustomLogger interface {
 	Info(v ...interface{})
 	Infof(format string, args ...interface{})
@@ -10,7 +10,7 @@ type CustomLogger interface {
 	Errorf(format string, args ...interface{})
 }
 
-// Logger provides support for standard logging
+// Logger provides support for standard logging.
 type Logger struct {
 	Info   func(v ...interface{})
 	Infof  func(format string, v ...interface{})

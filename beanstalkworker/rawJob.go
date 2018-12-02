@@ -29,8 +29,8 @@ type RawJob struct {
 	log         *Logger
 }
 
-// NewEmptyJob initialises a new empty RawJob with a custom logger
-// Useful for testing methods that log messages on the job
+// NewEmptyJob initialises a new empty RawJob with a custom logger.
+// Useful for testing methods that log messages on the job.
 func NewEmptyJob(cl CustomLogger) *RawJob {
 	logger := &Logger{
 		Info:   cl.Info,
@@ -125,7 +125,7 @@ func (job *RawJob) LogInfo(a ...interface{}) {
 	job.log.Info("Tube: ", job.tube, ", Job: ", job.id, ": ", fmt.Sprint(a...))
 }
 
-// unmarshalErrorAction handles unmarshal error, depending on the user choice
+// unmarshalErrorAction handles unmarshal error, depending on the user choice.
 func (job *RawJob) unmarshalErrorAction(unmarshalErrorAction string) {
 	switch unmarshalErrorAction {
 	case ActionDeleteJob:

@@ -64,7 +64,7 @@ func (w *Worker) Subscribe(tube string, cb Handler) {
 
 		if err := json.Unmarshal(*job.body, dataPtr.Interface()); err != nil {
 			job.LogError("Error decoding JSON for job: ", err, ", '", string(*job.body), "', "+w.unmarshalErrorAction+"...")
-			// Delete, Bury or Release (default behaviour) the job to the queue, depending on the user choice
+			// Delete, Bury or Release (default behaviour) the job to the queue, depending on the user choice.
 			job.unmarshalErrorAction(w.unmarshalErrorAction)
 			return
 		}

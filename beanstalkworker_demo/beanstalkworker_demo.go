@@ -59,7 +59,7 @@ func signalHandler(cancel context.CancelFunc) {
 
 //Custom Logging Example
 
-//MyLogger provides custom logging
+//MyLogger provides custom logging.
 type MyLogger struct {
 }
 
