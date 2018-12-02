@@ -17,7 +17,7 @@ Give as many relevant details you can, such as:
 
 1. Ensure the solution has been discussed with the owner before starting coding
 2. The PR description should contain all information to understand and test the changes
-3. Ensure [golint](https://github.com/golang/lint) and [go vet](https://golang.org/cmd/vet/0 are not complaining
+3. Ensure [golint](https://github.com/golang/lint) and [go vet](https://golang.org/cmd/vet/) are not complaining
 4. Document your changes, by updating the beanstalkworker example, README.md and comments in the code
 5. Use [gofmt](https://blog.golang.org/go-fmt-your-code) before committing
 6. commit small, commit often (with meaningful messages)
