@@ -1,12 +1,14 @@
 package beanstalkworker
 
-import "time"
-import "github.com/tomponline/beanstalk"
-import "encoding/json"
-import "reflect"
-import "context"
-import "strconv"
-import "sync"
+import (
+	"context"
+	"encoding/json"
+	"github.com/tomponline/beanstalk"
+	"reflect"
+	"strconv"
+	"sync"
+	"time"
+)
 
 // Handler provides an interface type for callback functions.
 type Handler interface{}
@@ -14,20 +16,22 @@ type Handler interface{}
 // Worker represents a single process that is connecting to beanstalkd
 // and is consuming jobs from one or more tubes.
 type Worker struct {
-	addr       string
-	tubeSubs   map[string]func(*RawJob)
-	numWorkers int
-	wg         sync.WaitGroup
-	log        *Logger
+	addr                 string
+	tubeSubs             map[string]func(*RawJob)
+	numWorkers           int
+	wg                   sync.WaitGroup
+	log                  *Logger
+	unmarshalErrorAction string
 }
 
 // NewWorker creates a new worker process,
 // but does not actually connect to beanstalkd server yet.
 func NewWorker(addr string) *Worker {
 	return &Worker{
-		addr:     addr,
-		tubeSubs: make(map[string]func(*RawJob)),
-		log:      NewDefaultLogger(),
+		addr:                 addr,
+		tubeSubs:             make(map[string]func(*RawJob)),
+		log:                  NewDefaultLogger(),
+		unmarshalErrorAction: ActionReleaseJob, // It ensures the job is released to the queue by default for unmarshal error.
 	}
 }
 
@@ -59,8 +63,9 @@ func (w *Worker) Subscribe(tube string, cb Handler) {
 		dataPtr := reflect.New(dataType)
 
 		if err := json.Unmarshal(*job.body, dataPtr.Interface()); err != nil {
-			job.LogError("Error decoding JSON for job: ", err, ", '", string(*job.body), "', releasing...")
-			job.Release()
+			job.LogError("Error decoding JSON for job: ", err, ", '", string(*job.body), "', "+w.unmarshalErrorAction+"...")
+			// Delete, Bury or Release (default behaviour) the job to the queue, depending on the user choice.
+			job.unmarshalErrorAction(w.unmarshalErrorAction)
 			return
 		}
 
@@ -86,6 +91,17 @@ func (w *Worker) Run(ctx context.Context) {
 	}
 
 	w.wg.Wait() //Block here until all workers cleanly finish.
+}
+
+// SetUnmarshalErrorAction defines what to do if there is an unmarshal error.
+func (w *Worker) SetUnmarshalErrorAction(action string) {
+	// If this action is different than Delete, Bury or Release, the last one will be chosen
+	// as the default action in case of an unmarshal error, via the method job.unmarshalErrorHandling.
+	if action != ActionDeleteJob && action != ActionBuryJob {
+		w.unmarshalErrorAction = ActionReleaseJob // By safety only and to keep log message consistent with the action.
+		return
+	}
+	w.unmarshalErrorAction = action
 }
 
 // startWorker activates a single worker and attempts to maintain a connection to the beanstalkd server.

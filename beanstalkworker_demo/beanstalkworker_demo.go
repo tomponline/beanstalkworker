@@ -24,6 +24,10 @@ func main() {
 	//Set concurrent worker threads to 2.
 	bsWorker.SetNumWorkers(2)
 
+	//Job is deleted from the queue if unmarshal error appears. We can
+	//decide to bury or release (default behaviour) it as well.
+	bsWorker.SetUnmarshalErrorAction(beanstalkworker.ActionDeleteJob)
+
 	//Define a common value (example a shared database connection)
 	commonVar := "some common value"
 
@@ -55,22 +59,27 @@ func signalHandler(cancel context.CancelFunc) {
 
 //Custom Logging Example
 
+//MyLogger provides custom logging.
 type MyLogger struct {
 }
 
+//Info logs a custom info message regarding the job.
 func (l *MyLogger) Info(v ...interface{}) {
 	log.Print("MyInfo: ", fmt.Sprint(v...))
 }
 
+//Infof logs a custom info message regarding the job.
 func (l *MyLogger) Infof(format string, v ...interface{}) {
 	format = "MyInfof: " + format
 	log.Print(fmt.Sprintf(format, v...))
 }
 
+//Error logs a custom error message regarding the job.
 func (l *MyLogger) Error(v ...interface{}) {
 	log.Print("MyError: ", fmt.Sprint(v...))
 }
 
+//Errorf logs a custom error message regarding the job.
 func (l *MyLogger) Errorf(format string, v ...interface{}) {
 	format = "MyErrorf: " + format
 	log.Print(fmt.Sprintf(format, v...))

@@ -4,6 +4,13 @@ import "time"
 import "github.com/tomponline/beanstalk"
 import "fmt"
 
+// Actions the user can choose in case of an unmarshal error.
+const (
+	ActionDeleteJob  = "delete"
+	ActionBuryJob    = "bury"
+	ActionReleaseJob = "release"
+)
+
 // RawJob represents the raw job data that is returned by beanstalkd.
 type RawJob struct {
 	id          uint64
@@ -22,8 +29,8 @@ type RawJob struct {
 	log         *Logger
 }
 
-// Initialise a new empty RawJob with a custom logger
-// Useful for testing methods that log messages on the job
+// NewEmptyJob initialises a new empty RawJob with a custom logger.
+// Useful for testing methods that log messages on the job.
 func NewEmptyJob(cl CustomLogger) *RawJob {
 	logger := &Logger{
 		Info:   cl.Info,
@@ -116,4 +123,18 @@ func (job *RawJob) LogError(a ...interface{}) {
 // LogInfo function logs an info message regarding the job.
 func (job *RawJob) LogInfo(a ...interface{}) {
 	job.log.Info("Tube: ", job.tube, ", Job: ", job.id, ": ", fmt.Sprint(a...))
+}
+
+// unmarshalErrorAction handles unmarshal error, depending on the user choice.
+func (job *RawJob) unmarshalErrorAction(unmarshalErrorAction string) {
+	switch unmarshalErrorAction {
+	case ActionDeleteJob:
+		job.Delete()
+	case ActionBuryJob:
+		job.Bury()
+	default:
+		// Release as the default option as this would be the safest option for the user.
+		// We don't want someone to have some jobs being deleted if they are not aware of it.
+		job.Release()
+	}
 }
