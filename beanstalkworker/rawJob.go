@@ -4,8 +4,8 @@ import "time"
 import "github.com/tomponline/beanstalk"
 import "fmt"
 
+// Actions the user can choose in case of an unmarshal error.
 const (
-	// Actions the user can choose in case of an unmarshal error.
 	ActionDeleteJob  = "Delete"
 	ActionBuryJob    = "Bury"
 	ActionReleaseJob = "Release"
@@ -29,7 +29,7 @@ type RawJob struct {
 	log         *Logger
 }
 
-// Initialise a new empty RawJob with a custom logger
+// NewEmptyJob initialises a new empty RawJob with a custom logger
 // Useful for testing methods that log messages on the job
 func NewEmptyJob(cl CustomLogger) *RawJob {
 	logger := &Logger{
