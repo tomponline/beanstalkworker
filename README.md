@@ -3,9 +3,13 @@ A helper library for creating beanstalkd consumer processes.
 
 ## Usage
 
-```go get -u github.com/tomponline/beanstalkworker/beanstalkworker```
+```go get -u github.com/tomponline/beanstalkworker```
 
-Please see beanstalkworker_demo folder for examples of how to use this library.
+## Docs/Examples
+
+Please see Go Docs for usage and examples:
+
+https://godoc.org/github.com/tomponline/beanstalkworker
 
 ## Aims
 
@@ -25,8 +29,8 @@ The library is broken down into the following components:
 
 This library is	a wrapper around the low-level Beanstalkd client written in Go:
 
-https://github.com/kr/beanstalk
+https://github.com/beanstalkd/go-beanstalk
 
 This client talks to Beanstalkd queue server:
 
-http://kr.github.io/beanstalkd/
+https://beanstalkd.github.io/
