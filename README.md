@@ -1,3 +1,4 @@
+[![GoDoc](https://godoc.org/github.com/tomponline/beanstalkworker?status.svg)](https://godoc.org/github.com/tomponline/beanstalkworker)
 # beanstalkworker
 A helper library for creating beanstalkd consumer processes.
 
