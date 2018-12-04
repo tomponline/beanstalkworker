@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/tomponline/beanstalkworker"
 )
@@ -28,18 +29,24 @@ func (job *ImportJobHandler) Run() {
 		if mrshErr != nil {
 			// We shouldn't ever have a problem marshalling a map[string]string
 			// but never say never
-			job.LogError("Could not re-marshal job data: ", mrshErr)
+			job.JobManager.LogError("Could not re-marshal job data: ", mrshErr)
 		}
 
 		// Log the job data then delete the job, we will never be able to process this job
 		// as it requires manual intervention
-		job.LogError("Job data is invalid: ", err, ", deleting job: ", string(jobStr))
+		job.JobManager.LogError("Job data is invalid: ", err, ", deleting job: ", string(jobStr))
 		job.Delete()
 
 		return
 	}
 
-	job.LogInfo("Got an import job of type ", job.jobData["type"])
+	job.JobManager.LogInfo("Got an import job of type ", job.jobData["type"])
+
+	// Sleep for 10 seconds, if the process receives an interrupt during this time
+	// beanstalkworker should finish processing the job before shutting down
+	time.Sleep(time.Duration(10 * time.Second))
+
+	job.JobManager.LogInfo("Job successfully imported")
 
 	// Delete the job when we have finished processing it
 	job.Delete()
