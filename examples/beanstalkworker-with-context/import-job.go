@@ -8,6 +8,7 @@ import (
 )
 
 // ImportJobData represents the job data that arrives from the import-jobs queue
+// we'll use map[string]string to keep the transport encoding simple for interoperability
 type ImportJobData map[string]string
 
 // ImportJobHandler contains all the helpers needed to process a job
@@ -44,6 +45,7 @@ func (job *ImportJobHandler) Run() {
 	job.Delete()
 }
 
+// validates job data before processing to ensure required job data is present
 func (job *ImportJobHandler) validateJobData() error {
 	// Required fields on our job
 	requiredFields := []string{"type"}
