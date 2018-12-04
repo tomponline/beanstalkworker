@@ -13,7 +13,11 @@ import (
 )
 
 const (
+	// Application name for logging
 	appName = "beanstalkworker-with-context"
+
+	// The import queue we want to read from
+	importQueue = "import-jobs"
 )
 
 var (
@@ -71,7 +75,7 @@ func runWorker(ctx context.Context) {
 	bsWorker.SetNumWorkers(*numWorkers)
 
 	// Subscribe to jobs from our queue
-	bsWorker.Subscribe("import-jobs", func(jobMgr beanstalkworker.JobManager, jobData ImportJobData) {
+	bsWorker.Subscribe(importQueue, func(jobMgr beanstalkworker.JobManager, jobData ImportJobData) {
 		// Set up a new 'import' job handler, attaching the job manager and job data to it
 		// ImportJobHandler embeds the beanstalkworker.JobManager to expose job control methods
 		jh := ImportJobHandler{
