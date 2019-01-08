@@ -3,7 +3,7 @@ package beanstalkworker
 import (
 	"context"
 	"encoding/json"
-	"github.com/tomponline/beanstalk"
+	"github.com/beanstalkd/go-beanstalk"
 	"reflect"
 	"strconv"
 	"sync"
