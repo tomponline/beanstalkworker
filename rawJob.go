@@ -1,7 +1,7 @@
 package beanstalkworker
 
 import "time"
-import "github.com/tomponline/beanstalk"
+import "github.com/beanstalkd/go-beanstalk"
 import "fmt"
 
 // Actions the user can choose in case of an unmarshal error.
