@@ -6,6 +6,7 @@ import "github.com/beanstalkd/go-beanstalk"
 // JobManager interface represents a way to handle a job's lifecycle.
 type JobManager interface {
 	Delete()
+	Touch()
 	Release()
 	LogError(a ...interface{})
 	LogInfo(a ...interface{})
