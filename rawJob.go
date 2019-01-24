@@ -53,7 +53,7 @@ func (job *RawJob) Delete() {
 
 // Touch function touches the job from the queue.
 func (job *RawJob) Touch() {
-	if err := job.conn.Delete(job.id); err != nil {
+	if err := job.conn.Touch(job.id); err != nil {
 		job.log.Error("Could not touch job: " + err.Error())
 	}
 }
