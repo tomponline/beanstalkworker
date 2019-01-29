@@ -51,6 +51,13 @@ func (job *RawJob) Delete() {
 	}
 }
 
+// Touch function touches the job from the queue.
+func (job *RawJob) Touch() {
+	if err := job.conn.Touch(job.id); err != nil {
+		job.log.Error("Could not touch job: " + err.Error())
+	}
+}
+
 // Release function releases the job from the queue.
 func (job *RawJob) Release() {
 	if err := job.conn.Release(job.id, job.returnPrio, job.returnDelay); err != nil {
